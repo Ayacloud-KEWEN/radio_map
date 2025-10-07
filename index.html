@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 
 <head>
   <meta charset="utf-8" />
@@ -243,7 +243,7 @@
   <div class="container">
     <header>
       <h1>Radio Map</h1>
-      <p class="lead">Radio-Browser API + 本地自定义电台 • Marker 聚合 • 播放加载指示 • 地图固定 600px</p>
+      <p class="lead">Radio Station from all of the world</p>
     </header>
 
     <div class="tabs" id="tabs">
@@ -267,13 +267,13 @@
 
           <div style="display:flex;gap:8px">
             <select id="source-filter" title="Filter source">
-              <option value="all">显示：全部</option>
-              <option value="local">本地</option>
+              <option value="all">Display：All</option>
+              <option value="local">Local</option>
               <option value="api">API</option>
             </select>
             <button id="load-popular" class="btn-ghost">Load Popular</button>
             <div style="flex:1;text-align:right">
-              <button id="download-sample" class="btn-ghost small">下载示例 radio.json</button>
+              <button id="download-sample" class="btn-ghost small">Download example: radio.json</button>
             </div>
           </div>
 
@@ -293,11 +293,11 @@
         <!-- Manage panel -->
         <div id="manage-panel" style="display:none">
           <div class="small cors-warning" style="background:rgba(255,152,0,0.08);padding:8px;border-radius:6px">
-            注意：若遇到 CORS 错误，可考虑替换代理或部署 Worker。
+            Info：Once CORS error happened，consider deploy Worker。
           </div>
 
           <form id="api-search-form" class="small" style="margin-bottom:8px">
-            <input id="api-search" type="text" placeholder="API 搜索（可选）" />
+            <input id="api-search" type="text" placeholder="API search（optional）" />
             <div style="display:flex;gap:8px">
               <input id="api-country" type="text" placeholder="Country" />
               <input id="api-tag" type="text" placeholder="Tag" />
@@ -318,8 +318,8 @@
           </form>
 
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button id="export-btn" class="btn-ghost small">导出 local JSON</button>
-            <button id="import-btn" class="btn-ghost small">导入 JSON</button>
+            <button id="export-btn" class="btn-ghost small">Export local JSON</button>
+            <button id="import-btn" class="btn-ghost small">Import JSON</button>
             <input id="import-file" type="file" accept=".json" style="display:none" />
           </div>
 
@@ -636,7 +636,7 @@
         playerStatus.textContent = `Playing: ${s.name}`;
       } catch (err) {
         console.error("播放失败:", err);
-        playerStatus.textContent = `播放失败: ${err.message || '可能受 CORS / 格式限制'}`;
+        playerStatus.textContent = `Play failed: ${err.message || 'Maybe CORS / format issue'}`;
         isPlaying = false;
         playToggleBtn.disabled = false;
         playToggleBtn.textContent = '▶ Play';
@@ -647,7 +647,7 @@
 
     /* 主开关 */
     playToggleBtn.addEventListener('click', () => {
-      if (!currentStation) { playerStatus.textContent = "请先选择并播放一个电台"; return; }
+      if (!currentStation) { playerStatus.textContent = "Please select one radio station to play"; return; }
       if (isPlaying) {
         audio.pause();
         isPlaying = false;
@@ -659,7 +659,7 @@
           playToggleBtn.textContent = '⏸ Pause';
           playerStatus.textContent = `Playing: ${currentStation.name}`;
         }).catch(err => {
-          playerStatus.textContent = `播放失败: ${err.message || 'autoplay'}`;
+          playerStatus.textContent = `Play failed: ${err.message || 'autoplay'}`;
         });
       }
     });
@@ -681,7 +681,7 @@
       const id = btn.dataset.id;
       const action = btn.dataset.action;
       if (action === 'delete') {
-        if (!confirm('确定删除该本地电台？')) return;
+        if (!confirm('Confirm to delete this local radio？')) return;
         stationsLocal = stationsLocal.filter(x => x.id !== id);
         saveLocal(); mergeAndRender();
       } else if (action === 'edit') {
@@ -713,11 +713,11 @@
         lng: parseFloat(document.getElementById('add-lng').value),
         fromAPI: false
       };
-      if (!st.name || !st.url || isNaN(st.lat) || isNaN(st.lng)) { alert('请填写完整且有效的数据（包括坐标）'); return; }
+      if (!st.name || !st.url || isNaN(st.lat) || isNaN(st.lng)) { alert('Please fill in all information'); return; }
       stationsLocal.push(st);
       saveLocal(); mergeAndRender();
       e.target.reset();
-      alert('已添加到本地收藏');
+      alert('Add to local list success');
     });
 
     /* import / export local JSON */
@@ -737,8 +737,8 @@
           const good = arr.filter(s => s && s.name && s.url && typeof s.lat === 'number' && typeof s.lng === 'number');
           if (!good.length) throw new Error('No valid stations in file');
           stationsLocal = good.map((s, i) => ({ id: s.id || `local-${Date.now()}-${i}`, ...s, fromAPI: false }));
-          saveLocal(); mergeAndRender(); alert('导入成功');
-        } catch (err) { alert('导入失败: ' + err.message); }
+          saveLocal(); mergeAndRender(); alert('Import success: ' + good.length + ' stations added');
+        } catch (err) { alert('Import failed: ' + err.message); }
       };
       reader.readAsText(f);
       e.target.value = '';
