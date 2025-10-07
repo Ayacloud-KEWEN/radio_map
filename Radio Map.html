@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Radio Map — Final</title>
+
+  <!-- Leaflet & MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <style>
+    /* 基本布局与视觉 */
+    :root {
+      --bg1: #0f3158;
+      --bg2: #6a1b1b;
+      --panel-bg: rgba(255, 255, 255, 0.04);
+      --accent: #1976d2;
+      --muted: rgba(255, 255, 255, 0.7);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 18px auto;
+      padding: 14px
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 10px
+    }
+
+    h1 {
+      margin: 4px 0;
+      font-size: 1.5rem
+    }
+
+    p.lead {
+      margin: 0;
+      font-size: 0.95rem;
+      opacity: 0.9
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0
+    }
+
+    .tab {
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--panel-bg);
+      cursor: pointer
+    }
+
+    .tab.active {
+      background: rgba(255, 255, 255, 0.12)
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .col.map {
+      flex: 1 1 700px;
+      min-width: 420px;
+      height: 600px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000
+    }
+
+    #map {
+      height: 100%;
+      width: 100%
+    }
+
+    .col.controls {
+      flex: 0 1 420px;
+      min-width: 300px;
+      background: var(--panel-bg);
+      padding: 12px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px
+    }
+
+    input[type="text"],
+    select,
+    input[type="number"],
+    input[type="url"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
+      color: #fff;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff
+    }
+
+    /* 列表：固定高度并可滚动 */
+    .stations-list,
+    .manage-list {
+      max-height: 360px;
+      overflow: auto;
+      padding: 6px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.12)
+    }
+
+    .station-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.02)
+    }
+
+    .station-item .meta {
+      font-size: 0.85rem;
+      color: var(--muted)
+    }
+
+    .small {
+      font-size: 0.85rem;
+      opacity: 0.9
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px
+    }
+
+    /* spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #fff;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    footer {
+      margin-top: 14px;
+      text-align: center;
+      opacity: 0.85;
+      font-size: 0.9rem
+    }
+
+    /* 响应式 */
+    @media (max-width:900px) {
+      .row {
+        flex-direction: column
+      }
+
+      .col.map {
+        height: 480px
+      }
+    }
+
+    .play-popup {
+      background-color: #1976d2 !important;
+      /* 蓝色背景 */
+      color: #fff !important;
+      /* 白字 */
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .play-popup:hover {
+      background-color: #1565c0 !important;
+      /* hover 深一点 */
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .leaflet-popup-tip {
+      background: rgba(0, 0, 0, 0.85);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Radio Map</h1>
+      <p class="lead">Radio-Browser API + 本地自定义电台 • Marker 聚合 • 播放加载指示 • 地图固定 600px</p>
+    </header>
+
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="listen">Listen</div>
+      <div class="tab" data-tab="manage">Manage</div>
+      <div class="tab" data-tab="add">Add Station</div>
+    </div>
+
+    <div class="row">
+      <div class="col map">
+        <div id="map"></div>
+      </div>
+
+      <div class="col controls">
+        <!-- Listen panel -->
+        <div id="listen-panel">
+          <div class="search-row">
+            <input id="search-input" type="text" placeholder="Search name / country / tag (local + API)" />
+            <button id="search-btn" class="btn-primary">Search</button>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <select id="source-filter" title="Filter source">
+              <option value="all">显示：全部</option>
+              <option value="local">本地</option>
+              <option value="api">API</option>
+            </select>
+            <button id="load-popular" class="btn-ghost">Load Popular</button>
+            <div style="flex:1;text-align:right">
+              <button id="download-sample" class="btn-ghost small">下载示例 radio.json</button>
+            </div>
+          </div>
+
+          <div class="stations-list" id="stations-list">
+            <div class="small">Loading stations…</div>
+          </div>
+
+          <div class="status-row">
+            <div id="play-spinner" style="display:none"><span class="spinner"></span></div>
+            <div id="player-status" class="small">Ready</div>
+            <div style="margin-left:auto">
+              <button id="play-toggle" class="btn-primary" disabled>▶ Play</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manage panel -->
+        <div id="manage-panel" style="display:none">
+          <div class="small cors-warning" style="background:rgba(255,152,0,0.08);padding:8px;border-radius:6px">
+            注意：若遇到 CORS 错误，可考虑替换代理或部署 Worker。
+          </div>
+
+          <form id="api-search-form" class="small" style="margin-bottom:8px">
+            <input id="api-search" type="text" placeholder="API 搜索（可选）" />
+            <div style="display:flex;gap:8px">
+              <input id="api-country" type="text" placeholder="Country" />
+              <input id="api-tag" type="text" placeholder="Tag" />
+            </div>
+            <div style="display:flex;gap:8px">
+              <select id="api-limit">
+                <option value="20">20</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+              </select>
+              <select id="api-order">
+                <option value="clickcount">Most popular</option>
+                <option value="votes">Votes</option>
+              </select>
+              <button class="btn-primary" type="submit">Search API</button>
+            </div>
+            <div id="api-stats" class="small" style="margin-top:6px"></div>
+          </form>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button id="export-btn" class="btn-ghost small">导出 local JSON</button>
+            <button id="import-btn" class="btn-ghost small">导入 JSON</button>
+            <input id="import-file" type="file" accept=".json" style="display:none" />
+          </div>
+
+          <div class="manage-list" id="manage-stations-list">
+            <div class="small">Local list empty</div>
+          </div>
+        </div>
+
+        <!-- Add panel -->
+        <div id="add-panel" style="display:none">
+          <form id="add-form">
+            <input id="add-name" type="text" placeholder="Station name *" required />
+            <input id="add-country" type="text" placeholder="Country *" required />
+            <input id="add-tags" type="text" placeholder="Tags (comma separated)" />
+            <input id="add-url" type="url" placeholder="Stream URL (https://...) *" required />
+            <div style="display:flex;gap:8px">
+              <input id="add-lat" type="number" step="any" placeholder="Latitude *" required />
+              <input id="add-lng" type="number" step="any" placeholder="Longitude *" required />
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-primary" type="submit">Add Station</button>
+              <button type="reset" class="btn-ghost">Reset</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <footer>Radio Map • OpenStreetMap • Radio-Browser</footer>
+  </div>
+
+  <!-- Leaflet & MarkerCluster -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script>
+    /* ========== 配置区 ========== */
+    const PROXY_ENABLED = true;                      // 若你有自建 Worker，可设 false
+    const proxyBase = "https://corsproxy.io/?";      // 可替换为你的代理
+    const apiNodes = [
+      "https://de1.api.radio-browser.info",
+      "https://nl1.api.radio-browser.info",
+      "https://at1.api.radio-browser.info",
+      "https://fi1.api.radio-browser.info"
+    ];
+    /* ========== 结束配置 ========== */
+
+    /* 状态变量 */
+    let stationsLocal = [];   // 本地电台
+    let stationsAPI = [];     // API 电台（转换后）
+    let stations = [];        // 合并后显示
+    let map, markerCluster;
+    let audio = new Audio();
+    let audioUnlocked = false;
+    let isPlaying = false;
+    let currentStation = null;
+
+    /* DOM */
+    const stationsListEl = document.getElementById("stations-list");
+    const manageListEl = document.getElementById("manage-stations-list");
+    const playToggleBtn = document.getElementById("play-toggle");
+    const playSpinner = document.getElementById("play-spinner");
+    const playerStatus = document.getElementById("player-status");
+    const searchInput = document.getElementById("search-input");
+    const searchBtn = document.getElementById("search-btn");
+    const sourceFilter = document.getElementById("source-filter");
+    const apiForm = document.getElementById("api-search-form");
+    const apiStats = document.getElementById("api-stats");
+    const loadPopularBtn = document.getElementById("load-popular");
+
+    /* 初始化地图 */
+    function initMap() {
+      map = L.map("map", { preferCanvas: true }).setView([20, 0], 2);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+      markerCluster = L.markerClusterGroup();
+      map.addLayer(markerCluster);
+    }
+    initMap();
+
+    /* audio 解锁：首次用户点击页面时触发 */
+    document.body.addEventListener("click", () => {
+      if (!audioUnlocked) {
+        audio.play().catch(() => { }); audio.pause();
+        audioUnlocked = true;
+      }
+    }, { once: true });
+
+    /* fetch helper: try nodes, then proxy */
+    async function fetchWithNodes(path, params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      const pathWithQs = path + (qs ? "?" + qs : "");
+      const nodes = [...apiNodes].sort(() => Math.random() - 0.5);
+      let lastErr = null;
+
+      for (const node of nodes) {
+        const url = node + pathWithQs;
+        try {
+          const resp = await fetch(url, { mode: 'cors', cache: 'no-store', headers: { 'Accept': 'application/json' } });
+          if (resp.ok) return await resp.json();
+          lastErr = new Error(`HTTP ${resp.status} from ${url}`);
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+
+      if (PROXY_ENABLED) {
+        try {
+          const target = encodeURIComponent((nodes[0] || apiNodes[0]) + pathWithQs);
+          const proxyUrl = proxyBase + target;
+          const resp = await fetch(proxyUrl, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
+          if (!resp.ok) throw new Error(`Proxy HTTP ${resp.status}`);
+          return await resp.json();
+        } catch (pErr) {
+          lastErr = pErr;
+        }
+      }
+
+      throw lastErr || new Error("All fetch attempts failed");
+    }
+
+    /* convert API station -> app station */
+    function convertAPIStation(s) {
+      const lat = parseFloat(s.geo_lat);
+      const lng = parseFloat(s.geo_long);
+      return {
+        id: s.stationuuid ? `api-${s.stationuuid}` : `api-${Math.random().toString(36).slice(2, 9)}`,
+        name: s.name || 'Unknown',
+        country: s.country || s.countrycode || 'Unknown',
+        tags: s.tags || '',
+        url: s.url_resolved || s.url || '',
+        lat: isNaN(lat) ? null : lat,
+        lng: isNaN(lng) ? null : lng,
+        codec: s.codec || '',
+        fromAPI: true,
+        raw: s
+      };
+    }
+
+    /* load popular */
+    async function loadPopular(limit = 50) {
+      apiStats.textContent = "Loading popular...";
+      try {
+        const data = await fetchWithNodes(`/json/stations/topclick/${limit}`, {});
+        stationsAPI = (Array.isArray(data) ? data : []).map(convertAPIStation);
+        apiStats.textContent = `Loaded ${stationsAPI.length} stations`;
+        mergeAndRender();
+      } catch (err) {
+        console.error("loadPopular failed:", err);
+        apiStats.textContent = `Load failed: ${err.message}`;
+      }
+    }
+
+    /* search API */
+    async function searchAPI(params) {
+      apiStats.textContent = "Searching API...";
+      try {
+        const data = await fetchWithNodes('/json/stations/search', params);
+        stationsAPI = (Array.isArray(data) ? data : []).map(convertAPIStation);
+        apiStats.textContent = `Found ${stationsAPI.length}`;
+        mergeAndRender();
+      } catch (err) {
+        console.error("API search failed:", err);
+        apiStats.textContent = `Search failed: ${err.message}`;
+      }
+    }
+
+    /* local storage load/save */
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem("radioStations");
+        if (raw) stationsLocal = JSON.parse(raw);
+        else stationsLocal = [];
+      } catch (e) { stationsLocal = []; }
+    }
+    function saveLocal() { localStorage.setItem("radioStations", JSON.stringify(stationsLocal, null, 2)); }
+
+    /* merge and render */
+    function mergeAndRender() {
+      const localUrls = new Set(stationsLocal.map(s => s.url));
+      const mergedAPI = stationsAPI.filter(s => !localUrls.has(s.url));
+      stations = [...stationsLocal, ...mergedAPI];
+      renderStationsList();
+      renderManageList();
+      renderMarkers();
+    }
+
+    /* render left list */
+    function renderStationsList() {
+      const q = (searchInput.value || "").toLowerCase().trim();
+      const source = sourceFilter.value;
+      stationsListEl.innerHTML = '';
+      const filtered = stations.filter(s => {
+        if (source === 'local' && s.fromAPI) return false;
+        if (source === 'api' && !s.fromAPI) return false;
+        if (!q) return true;
+        return (s.name || '').toLowerCase().includes(q) || (s.country || '').toLowerCase().includes(q) || (s.tags || '').toLowerCase().includes(q);
+      });
+
+      if (!filtered.length) {
+        stationsListEl.innerHTML = '<div class="small">No stations found</div>';
+        return;
+      }
+
+      filtered.forEach(s => {
+        const node = document.createElement('div');
+        node.className = 'station-item';
+        node.innerHTML = `<div>
+        <div style="font-weight:600">${s.name}</div>
+        <div class="meta small">${s.country} • ${s.tags} ${s.fromAPI ? '<span class="small">[API]</span>' : '<span class="small">[LOCAL]</span>'}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-ghost small" data-id="${s.id}" data-action="play">▶</button>
+        <button class="btn-ghost small" data-id="${s.id}" data-action="loc">📍</button>
+      </div>`;
+        stationsListEl.appendChild(node);
+      });
+    }
+
+    /* render manage local list */
+    function renderManageList() {
+      manageListEl.innerHTML = '';
+      if (!stationsLocal.length) { manageListEl.innerHTML = '<div class="small">本地收藏为空</div>'; return; }
+      stationsLocal.forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'station-item';
+        d.innerHTML = `<div><div style="font-weight:600">${s.name}</div><div class="meta small">${s.country} • ${s.tags}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn-ghost small" data-id="${s.id}" data-action="edit">Edit</button>
+        <button class="btn-ghost small" data-id="${s.id}" data-action="delete">Delete</button>
+      </div>`;
+        manageListEl.appendChild(d);
+      });
+    }
+
+    /* markers */
+    let markerIndex = {};
+    function renderMarkers() {
+      markerCluster.clearLayers();
+      markerIndex = {};
+      stations.forEach(s => {
+        if (typeof s.lat === 'number' && typeof s.lng === 'number' && s.lat !== null && s.lng !== null) {
+          const marker = L.marker([s.lat, s.lng]);
+          const popupHtml = `<div style="min-width:180px">
+        <div style="font-weight:700">${s.name}</div>
+        <div class="small">${s.country} • ${s.tags}</div>
+        <div style="margin-top:8px"><button class="btn-ghost small play-popup" data-id="${s.id}">▶ Play</button></div>
+      </div>`;
+          marker.bindPopup(popupHtml);
+          marker.on('popupopen', (e) => {
+            // 延迟一点再找按钮，确保 popup 内容已加载
+            setTimeout(() => {
+              const popupEl = e.popup.getElement();
+              if (!popupEl) return;
+              const btn = popupEl.querySelector('.play-popup');
+              if (btn) {
+                btn.addEventListener('click', (ev) => {
+                  ev.stopPropagation();
+                  const id = btn.dataset.id;
+                  playStationById(id);
+                });
+              }
+            }, 50);
+          });
+          markerCluster.addLayer(marker);
+          markerIndex[s.id] = marker;
+
+        }
+      });
+    }
+
+    /* find station by id */
+    function findStation(id) {
+      return stations.find(s => s.id === id) || stationsLocal.find(s => s.id === id) || stationsAPI.find(s => s.id === id);
+    }
+
+    /* focus on map */
+    function focusStation(id) {
+      const s = findStation(id);
+      if (!s) { playerStatus.textContent = "无法定位：找不到该电台"; return; }
+      if (typeof s.lat === 'number' && typeof s.lng === 'number') {
+        map.setView([s.lat, s.lng], Math.max(6, map.getZoom()));
+        const m = markerIndex[id];
+        if (m) m.openPopup();
+      } else {
+        playerStatus.textContent = "该电台无经纬度信息";
+      }
+    }
+
+    /* 播放（带加载 spinner） */
+    async function playStationById(id) {
+      const s = findStation(id);
+      if (!s) { playerStatus.textContent = "找不到该电台"; return; }
+      if (!s.url) { playerStatus.textContent = "该电台没有流地址"; return; }
+
+      // UI: show spinner + connecting
+      playSpinner.style.display = '';
+      playerStatus.textContent = `Connecting to ${s.name}...`;
+      playToggleBtn.disabled = true;
+
+      try {
+        audio.pause();
+        audio.src = s.url;
+        audio.crossOrigin = "anonymous";
+        // wait for canplaythrough or for play() success
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
+        isPlaying = true;
+        currentStation = s;
+        playToggleBtn.disabled = false;
+        playToggleBtn.textContent = '⏸ Pause';
+        playerStatus.textContent = `Playing: ${s.name}`;
+      } catch (err) {
+        console.error("播放失败:", err);
+        playerStatus.textContent = `播放失败: ${err.message || '可能受 CORS / 格式限制'}`;
+        isPlaying = false;
+        playToggleBtn.disabled = false;
+        playToggleBtn.textContent = '▶ Play';
+      } finally {
+        playSpinner.style.display = 'none';
+      }
+    }
+
+    /* 主开关 */
+    playToggleBtn.addEventListener('click', () => {
+      if (!currentStation) { playerStatus.textContent = "请先选择并播放一个电台"; return; }
+      if (isPlaying) {
+        audio.pause();
+        isPlaying = false;
+        playToggleBtn.textContent = '▶ Play';
+        playerStatus.textContent = `Paused: ${currentStation.name}`;
+      } else {
+        audio.play().then(() => {
+          isPlaying = true;
+          playToggleBtn.textContent = '⏸ Pause';
+          playerStatus.textContent = `Playing: ${currentStation.name}`;
+        }).catch(err => {
+          playerStatus.textContent = `播放失败: ${err.message || 'autoplay'}`;
+        });
+      }
+    });
+
+    /* 事件代理：列表按钮 */
+    stationsListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'play') playStationById(id);
+      if (action === 'loc') focusStation(id);
+    });
+
+    /* manage list actions */
+    manageListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'delete') {
+        if (!confirm('确定删除该本地电台？')) return;
+        stationsLocal = stationsLocal.filter(x => x.id !== id);
+        saveLocal(); mergeAndRender();
+      } else if (action === 'edit') {
+        const st = stationsLocal.find(x => x.id === id);
+        if (!st) return;
+        // prefill add-form
+        document.getElementById('add-name').value = st.name;
+        document.getElementById('add-country').value = st.country;
+        document.getElementById('add-tags').value = st.tags;
+        document.getElementById('add-url').value = st.url;
+        document.getElementById('add-lat').value = st.lat;
+        document.getElementById('add-lng').value = st.lng;
+        // remove old (simple edit flow)
+        stationsLocal = stationsLocal.filter(x => x.id !== id);
+        saveLocal(); mergeAndRender();
+      }
+    });
+
+    /* add local station */
+    document.getElementById('add-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const st = {
+        id: `local-${Date.now()}`,
+        name: document.getElementById('add-name').value.trim(),
+        country: document.getElementById('add-country').value.trim(),
+        tags: document.getElementById('add-tags').value.trim(),
+        url: document.getElementById('add-url').value.trim(),
+        lat: parseFloat(document.getElementById('add-lat').value),
+        lng: parseFloat(document.getElementById('add-lng').value),
+        fromAPI: false
+      };
+      if (!st.name || !st.url || isNaN(st.lat) || isNaN(st.lng)) { alert('请填写完整且有效的数据（包括坐标）'); return; }
+      stationsLocal.push(st);
+      saveLocal(); mergeAndRender();
+      e.target.reset();
+      alert('已添加到本地收藏');
+    });
+
+    /* import / export local JSON */
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(stationsLocal, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'radio_local.json'; a.click();
+    });
+    document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
+    document.getElementById('import-file').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const arr = JSON.parse(reader.result);
+          if (!Array.isArray(arr)) throw new Error('JSON must be array');
+          const good = arr.filter(s => s && s.name && s.url && typeof s.lat === 'number' && typeof s.lng === 'number');
+          if (!good.length) throw new Error('No valid stations in file');
+          stationsLocal = good.map((s, i) => ({ id: s.id || `local-${Date.now()}-${i}`, ...s, fromAPI: false }));
+          saveLocal(); mergeAndRender(); alert('导入成功');
+        } catch (err) { alert('导入失败: ' + err.message); }
+      };
+      reader.readAsText(f);
+      e.target.value = '';
+    });
+
+    /* download sample JSON */
+    document.getElementById('download-sample').addEventListener('click', () => {
+      const sample = [
+        { id: "local-1", name: "My Local Radio", country: "France", tags: "local,music", url: "https://stream.example.com/mystream.mp3", lat: 48.8566, lng: 2.3522 }
+      ];
+      const blob = new Blob([JSON.stringify(sample, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'radio_sample.json'; a.click();
+    });
+
+    /* search (local + API background) */
+    searchBtn.addEventListener('click', async () => {
+      // render local-filtered results quickly
+      renderStationsList();
+      const q = searchInput.value.trim();
+      if (!q) return;
+      // API search in background and merge
+      await searchAPI({ name: q, limit: 50, hidebroken: true });
+    });
+
+    /* API form */
+    document.getElementById('api-search-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const params = {
+        name: document.getElementById('api-search').value.trim() || undefined,
+        country: document.getElementById('api-country').value.trim() || undefined,
+        tag: document.getElementById('api-tag').value.trim() || undefined,
+        order: document.getElementById('api-order').value,
+        limit: document.getElementById('api-limit').value,
+        hidebroken: true
+      };
+      await searchAPI(params);
+    });
+
+    /* load popular */
+    loadPopularBtn.addEventListener('click', () => loadPopular(50));
+
+    /* source filter */
+    sourceFilter.addEventListener('change', () => renderStationsList());
+
+    /* tabs */
+    document.getElementById('tabs').addEventListener('click', (e) => {
+      const t = e.target.closest('.tab');
+      if (!t) return;
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      document.getElementById('listen-panel').style.display = tab === 'listen' ? '' : 'none';
+      document.getElementById('manage-panel').style.display = tab === 'manage' ? '' : 'none';
+      document.getElementById('add-panel').style.display = tab === 'add' ? '' : 'none';
+    });
+
+    /* initial load */
+    function init() {
+      loadLocal();
+      // try load popular but ignore failure
+      loadPopular(50).catch(() => { });
+    }
+    init();
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,172 @@
+[
+  {
+    "id": "1",
+    "name": "BBC Radio 1",
+    "country": "United Kingdom",
+    "tags": "pop,top 40",
+    "url": "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "codec": "mp3"
+  },
+  {
+    "id": "2",
+    "name": "Radio France Inter",
+    "country": "France", 
+    "tags": "news,talk",
+    "url": "https://direct.franceinter.fr/live/franceinter-midfi.mp3",
+    "lat": 48.8566,
+    "lng": 2.3522,
+    "codec": "mp3"
+  },
+  {
+    "id": "3",
+    "name": "NPR",
+    "country": "United States",
+    "tags": "news,talk,public radio",
+    "url": "https://npr.streamguys1.com/nprlive24.mp3",
+    "lat": 38.9072,
+    "lng": -77.0369,
+    "codec": "mp3"
+  },
+  {
+    "id": "4",
+    "name": "J-WAVE 81.3 FM",
+    "country": "Japan",
+    "tags": "pop,urban,music",
+    "url": "http://radiko.jp/hls/stream_L_01.m3u8",
+    "lat": 35.6895,
+    "lng": 139.6917,
+    "codec": "m3u8"
+  },
+  {
+    "id": "5",
+    "name": "Triple J",
+    "country": "Australia",
+    "tags": "alternative,rock,indie",
+    "url": "https://live-radio01.media.abc.net.au/triplej/live.m3u8",
+    "lat": -33.8688,
+    "lng": 151.2093,
+    "codec": "m3u8"
+  },
+  {
+    "id": "6",
+    "name": "Deutsche Welle Radio",
+    "country": "Germany",
+    "tags": "news,world,talk",
+    "url": "https://icecast.dw.com/dw/audio/mp3/live",
+    "lat": 52.5200,
+    "lng": 13.4050,
+    "codec": "mp3"
+  },
+  {
+    "id": "7",
+    "name": "CBC Radio One",
+    "country": "Canada",
+    "tags": "news,talk,public radio",
+    "url": "http://cbc-chum-hls.akamaized.net/hls/live/2000547/CBC_RadioOne_Toronto/master.m3u8",
+    "lat": 43.6532,
+    "lng": -79.3832,
+    "codec": "m3u8"
+  },
+  {
+    "id": "8",
+    "name": "Radio 357",
+    "country": "Poland",
+    "tags": "talk,music,news",
+    "url": "https://radio357.pl/stream.mp3",
+    "lat": 52.2297,
+    "lng": 21.0122,
+    "codec": "mp3"
+  },
+  {
+    "id": "9",
+    "name": "Radio Monte Carlo",
+    "country": "Monaco",
+    "tags": "pop,variety,music",
+    "url": "http://rmc.ice.infomaniak.ch/rmc-high.mp3",
+    "lat": 43.7384,
+    "lng": 7.4246,
+    "codec": "mp3"
+  },
+  {
+    "id": "10",
+    "name": "Radio Javan",
+    "country": "Iran",
+    "tags": "pop,farsi,persian",
+    "url": "http://stream.radiojavan.com/mp3",
+    "lat": 35.6892,
+    "lng": 51.3890,
+    "codec": "mp3"
+  },
+  {
+    "id": "11",
+    "name": "Radio ZET",
+    "country": "Poland",
+    "tags": "pop,top 40,hits",
+    "url": "http://www.radiozet.pl/play/player_1.mp3",
+    "lat": 52.23,
+    "lng": 21.02,
+    "codec": "mp3"
+  },
+  {
+    "id": "12",
+    "name": "Classic FM",
+    "country": "United Kingdom",
+    "tags": "classical,music",
+    "url": "https://media-ssl.musicradio.com/ClassicFM",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "codec": "mp3"
+  },
+  {
+    "id": "13",
+    "name": "Radio City 91.1 FM",
+    "country": "India",
+    "tags": "bollywood,hindi,pop",
+    "url": "http://prclive1.listenon.in:9960/;",
+    "lat": 19.076,
+    "lng": 72.8777,
+    "codec": "mp3"
+  },
+  {
+    "id": "14",
+    "name": "Radio Kiss Kiss",
+    "country": "Italy",
+    "tags": "pop,hits,dance",
+    "url": "http://wma07.stream24.it:11000/kisskiss.mp3",
+    "lat": 40.8518,
+    "lng": 14.2681,
+    "codec": "mp3"
+  },
+  {
+    "id": "15",
+    "name": "Radio Swiss Jazz",
+    "country": "Switzerland",
+    "tags": "jazz,music,smooth jazz",
+    "url": "https://stream.srg-ssr.ch/m/rsj/mp3_128",
+    "lat": 46.8182,
+    "lng": 8.2275,
+    "codec": "mp3"
+  },
+  {
+    "id": "16",
+    "name": "KEXP 90.3 FM",
+    "country": "United States",
+    "tags": "alternative,indie,rock",
+    "url": "https://kexp-mp3-128.streamguys1.com/kexp128.mp3",
+    "lat": 47.6062,
+    "lng": -122.3321,
+    "codec": "mp3"
+  },
+  {
+    "id": "17",
+    "name": "Shanghai Media Group",
+    "country": "China",
+    "tags": "news,talk,variety",
+    "url": "http://live.radio.smg.cn/fm1017",
+    "lat": 31.2304,
+    "lng": 121.4737,
+    "codec": "mp3"
+  }
+]
